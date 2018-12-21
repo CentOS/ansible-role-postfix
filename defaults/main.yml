@@ -1,0 +1,5 @@
+### Default values for postfix role
+
+# If we want to relay outgoing mails to specific host
+postfix_relay_to: False
+postfix_relay_to_hostname: relay.big.corp
