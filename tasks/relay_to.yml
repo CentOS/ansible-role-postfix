@@ -21,6 +21,7 @@
     regexp: '^relayhost'
     line: "relayhost = [{{ postfix_relay_to_hostname }}]"
   when: postfix_relay_to  
+  notify: restart_postfix
 
 - name: Postfix should be enabled and running
   service:
