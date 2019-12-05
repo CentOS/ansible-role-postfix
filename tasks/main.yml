@@ -1,7 +1,96 @@
-- name: Ensuring that postfix is installed
+- name: Ensuring that postfix pkgs are installed
   yum:
-    name: postfix
-    state: installed
+    name: ['postfix', 'pypolicyd-spf']
+    state: latest
+
+- name: FAS helpers for virtusertable
+  include_tasks: fas-aliases.yml
+  when: postfix_fas_aliases
+
+- name: TLS files for postfix
+  include_tasks: tls.yml
+  when: postfix_tls_enable
+
+- name: Configure postfix master.cf (Adding policyd for SPF)
+  template: 
+    src: master.cf.j2 
+    dest: /etc/postfix/master.cf
+  notify: restart_postfix
+  tags:
+    - config 
+
+- name: Configure postfix main.cf
+  template: 
+    src: main.cf.j2 
+    dest: /etc/postfix/main.cf
+  notify: restart_postfix
+  tags:
+    - config
+
+- name: Configure postfix transport
+  template: 
+    src: transport.j2 
+    dest: /etc/postfix/transport
+  notify: postmap_transport
+  tags:
+    - config
+
+- name: Configure postfix access table
+  template: 
+    src: access.j2 
+    dest: /etc/postfix/access
+  notify: postmap_access
+  tags:
+    - config
+
+- name: Configure aliases table
+  template: 
+    src: aliases.j2 
+    dest: /etc/aliases
+  notify: postfix_newaliases
+  tags:
+    - config
+
+- name: Configure postfix relay_recipient
+  template: 
+    src: relay_recipients.j2 
+    dest: /etc/postfix/relay_recipients
+  notify: postmap_relay_recipients
+  when: postfix_filter_recipients
+
+- name: Configure SFP python policy
+  template: 
+    src: policyd-spf.conf.j2
+    dest: /etc/python-policyd-spf/policyd-spf.conf
+  notify: restart_postfix
+  tags:
+    - spf
+
+- name: Opening up smtpd
+  include_role:
+    name: iptables
+    tasks_from: custom-policy
+  vars:
+    iptables_policy_name: smtpd
+    iptables_protocol: tcp
+    iptables_port: "25"
+    iptables_source: "0.0.0.0/0"
+  when: postfix_public
+  tags:
+    - iptables
+
+- name: Opening up smtpd over ipv6
+  include_role:
+    name: iptables
+    tasks_from: custom-policy-ipv6
+  vars:
+    iptables_policy_name: smtpd
+    iptables_protocol: tcp
+    iptables_port: "25"
+    iptables_source: "::/0"
+  when: postfix_public
+  tags:
+    - iptables
 
 - name: Postfix should be enabled and running
   service:
@@ -9,15 +98,3 @@
     state: started
     enabled: true
 
-- name: Ensuring postfix will use TLS (client part)
-  blockinfile:
-    path: /etc/postfix/main.cf
-    block: |
-     # TLS - client part
-     smtp_tls_CAfile=/etc/pki/tls/certs/ca-bundle.crt
-     smtp_tls_security_level = may
-     smtp_tls_loglevel = 1
-     smtp_tls_mandatory_protocols = !SSLv2, !SSLv3
-     smtp_tls_protocols = !SSLv2, !SSLv3
-  notify: restart_postfix
- 

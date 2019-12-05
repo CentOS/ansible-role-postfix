@@ -1,0 +1,23 @@
+
+- name: TLS certs for {{ postfix_tls_cn }}
+  copy:
+    src: "{{ pkistore }}/{{ item }}"
+    dest: "/etc/pki/tls/certs/{{ item }}"
+  with_items:
+    - "{{ postfix_tls_cn }}.crt"
+    - "{{ postfix_tls_cn }}-CAChain.crt"
+  tags:
+    - tls
+    - pki
+  notify: restart_postfix
+
+- name: TLS key for {{ postfix_tls_cn }}
+  copy:
+    src: "{{ pkistore }}/{{ item }}"
+    dest: "/etc/pki/tls/private/{{ item }}"
+  with_items:
+    - "{{ postfix_tls_cn }}.key"
+  tags:
+    - tls
+    - pki
+  notify: restart_postfix

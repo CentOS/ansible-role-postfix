@@ -1,0 +1,19 @@
+- name: Ensuring needed pkgs are installed
+  yum:
+    name: python-centos
+    state: installed
+
+- name: Ensuring script to query FAS and reload virtusertable
+  template:
+    src: gen-virtusertable-from-fas.j2
+    dest: /usr/libexec/centos/gen-virtusertable-from-fas
+    owner: root
+    group: root
+    mode: 0750
+
+- name: Cron job to query FAS
+  cron:
+    name: FAS virtusertable refresh
+    job: /usr/libexec/centos/gen-virtusertable-from-fas
+    minute: "*/8"
+    user: root

@@ -1,0 +1,107 @@
+# This file is managed by Ansible - Don't edit !
+# Including first all known aliases
+
+# Basic system aliases -- these MUST be present.
+mailer-daemon:  postmaster
+postmaster:     root
+
+# General redirections for pseudo accounts.
+bin:		root
+daemon:		root
+adm:		root
+lp:		root
+sync:		root
+shutdown:	root
+halt:		root
+mail:		root
+news:		root
+uucp:		root
+operator:	root
+games:		root
+gopher:		root
+ftp:		root
+nobody:		root
+radiusd:	root
+nut:		root
+dbus:		root
+vcsa:		root
+canna:		root
+wnn:		root
+rpm:		root
+nscd:		root
+pcap:		root
+apache:		root
+webalizer:	root
+dovecot:	root
+fax:		root
+quagga:		root
+radvd:		root
+pvm:		root
+amandabackup:		root
+privoxy:	root
+ident:		root
+named:		root
+xfs:		root
+gdm:		root
+mailnull:	root
+postgres:	root
+sshd:		root
+smmsp:		root
+postfix:	root
+netdump:	root
+ldap:		root
+squid:		root
+ntp:		root
+mysql:		root
+desktop:	root
+rpcuser:	root
+rpc:		root
+nfsnobody:	root
+
+ingres:		root
+system:		root
+toor:		root
+manager:	root
+dumper:		root
+abuse:		root
+
+newsadm:	news
+newsadmin:	news
+usenet:		news
+ftpadm:		ftp
+ftpadmin:	ftp
+ftp-adm:	ftp
+ftp-admin:	ftp
+www:		webmaster
+webmaster:	root
+noc:		root
+security:	root
+hostmaster:	root
+info:		postmaster
+marketing:	postmaster
+sales:		postmaster
+support:	postmaster
+
+# trap decode to catch security attacks
+decode:		root
+
+# Now aliases coming from ansible, postfix_aliases
+{% for alias in postfix_aliases %}
+{{ alias.name }}: {{ alias.rcpt }}
+{% endfor %}
+
+{% if postfix_mailman %}
+# Adding now all mailman lists here too
+{% for list in mailman_lists %}
+{{ list.name | lower }}: "| /usr/lib/mailman/mail/mailman post {{ list.name | lower }}"
+{{ list.name | lower }}-confirm: "| /usr/lib/mailman/mail/mailman confirm {{ list.name | lower }}"
+{{ list.name | lower }}-bounces: "| /usr/lib/mailman/mail/mailman bounces {{ list.name | lower }}"
+{{ list.name | lower }}-owner: "| /usr/lib/mailman/mail/mailman owner {{ list.name | lower }}"
+{{ list.name | lower }}-admin: "| /usr/lib/mailman/mail/mailman admin {{ list.name | lower }}"
+{{ list.name | lower }}-subscribe: "| /usr/lib/mailman/mail/mailman subscribe {{ list.name | lower }}"
+{{ list.name | lower }}-unsubscribe: "| /usr/lib/mailman/mail/mailman unsubscribe {{ list.name | lower }}"
+{{ list.name | lower }}-join: "| /usr/lib/mailman/mail/mailman join {{ list.name | lower }}"
+{{ list.name | lower }}-leave: "| /usr/lib/mailman/mail/mailman leave {{ list.name | lower }}"
+{{ list.name | lower }}-request: "| /usr/lib/mailman/mail/mailman request {{ list.name | lower }}"
+{% endfor %}
+{% endif %}

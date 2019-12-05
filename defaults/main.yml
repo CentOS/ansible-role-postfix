@@ -1,5 +1,79 @@
 ### Default values for postfix role
 
+# Main variables for postfix role
+postfix_myhostname: "{{ inventory_hostname }}"
+postfix_mynetworks: "127.0.0.0/8"
+# for which domains we accept mails
+postfix_mydestination: 
+  - domain.org
+
+postfix_rbl_lists:
+  - zen.spamhaus.org
+  - ix.dnsbl.manitu.net
+  - bl.spamcop.net
+
+# Should we open tcp/25 in firewall
+postfix_public: True
+
+
+# Do we want to masquerade
+postfix_masquerade_domains: domain.org
+
+# other domains for which we can receive mail through virtusertable
+postfix_virtuser_support: False
+postfix_virtual_alias_domains: otherdomain.org
+
+# Local aliases
+# multiple recipients have to be separated by ','
+postfix_aliases:
+  - name: root
+    rcpt: you@domain.com,other@other.com
+
+# Enabling STARTTLS for postfix
+# If set to True, be sure to point to a cert/key/ca
+# And so file the tls variables to point to those files
+postfix_tls_enable: False
+# Based on cn, we expect to find .crt .key and -CAChain.crt files in pkistore
+postfix_tls_cn: "{{ inventory_hostname }}"
+
+
+# If we're used to only relay to somewhere else, we can filter here
+postfix_filter_recipients: False
+postfix_filter_recipient_list: [ ] 
+# Specific map for where to send mails (like internal without MX)
+postfix_relay_domains:
+  - name: internal.domain.corp
+    smtp_host: 192.168.1.1
+
+# Postfix access tables : ok or reject actions
+postfix_access_whitelist:
+  - 127.0.0.1
+postfix_access_reject:
+  - spammer@spam.com
+
+# We can also define a host group that will be parsed to be added in postfix access (and so relay through us)
+# postfix_access_groups:
+#   - mygroup
+
+# Which addresses do we want to skip/whitelist for SPF
+postfix_spf_whitelist:
+  - ::1
+  - 127.0.0.1
+
+# For virtusertable we can query FAS
+# if True, it needs user/pass/url and group to query from FAS
+postfix_fas_aliases: False
+postfix_fas_url: https://accounts.centos.org
+postfix_fas_user:
+postfix_fas_pass:
+postfix_fas_group:
+
+# Are we used to host mailman lists ?
+# If set to True, it will import from variables/mailman role the 
+# mailman_lists list to be included in aliases
+postfix_mailman: False
+
+# Usually used also for only included tasks on other nodes to relay
 # If we want to relay outgoing mails to specific host
 postfix_relay_to: False
 postfix_relay_to_hostname: relay.big.corp

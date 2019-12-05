@@ -1,0 +1,3 @@
+{% for domain in postfix_relay_domains %}
+{{ domain.name }}	smtp:[{{ domain.smtp_host}}]
+{% endfor %}

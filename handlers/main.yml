@@ -2,3 +2,19 @@
   service:
     name: postfix
     state: restarted
+
+- name: postfix_newaliases
+  shell: /usr/bin/newaliases
+
+- name: postmap_access
+  shell: /sbin/postmap /etc/postfix/access
+
+- name: postmap_virtusertable
+  shell: /sbin/postmap /etc/postfix/virtusertable
+
+- name: postmap_transport
+  shell: /sbin/postmap /etc/postfix/transport
+
+- name: postmap_relay_recipients
+  shell: /sbin/postmap /etc/postfix/relay_recipients
+    

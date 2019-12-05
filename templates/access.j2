@@ -1,0 +1,21 @@
+# Generating access table from ansible
+{% for item in postfix_access_whitelist %}
+{{ item }} ok
+{% endfor %}
+
+{% if postfix_access_groups is defined %}
+# Now the one from inventory groups if defined
+{% for group in postfix_access_groups%}
+# Parsing inventory group {{ group }}
+{% for host in groups[group] %}
+{% if hostvars[host].ip is defined %}
+{{ hostvars[host].ip }} ok
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% endif %}
+
+# Rejected ones
+{% for item in postfix_access_reject %}
+{{ item }} reject
+{% endfor %}
