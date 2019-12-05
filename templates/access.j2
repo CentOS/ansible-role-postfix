@@ -11,6 +11,9 @@
 {% if hostvars[host].ip is defined %}
 {{ hostvars[host].ip }} ok
 {% endif %}
+{% if hostvars[host].ipv6 is defined %}
+{{ hostvars[host].ipv6 }} ok
+{% endif %}
 {% endfor %}
 {% endfor %}
 {% endif %}
