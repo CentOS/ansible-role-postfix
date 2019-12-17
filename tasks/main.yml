@@ -98,3 +98,13 @@
     state: started
     enabled: true
 
+- name: Ensuring backup user and jobs
+  include_role:
+    name: centos-backup
+    tasks_from: client
+  vars:
+    - centos_role: postfix
+    - role_backup_folders:
+        - /var/spool/postfix
+  tags:
+    - backup
