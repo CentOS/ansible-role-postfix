@@ -23,6 +23,22 @@
   when: postfix_relay_to  
   notify: restart_postfix
 
+- name: Enabling listening on all interfaces 
+  lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: '^inet_interfaces'
+    line: "inet_interfaces = all"
+  when: postfix_relay_to  
+  notify: restart_postfix
+
+- name: Configure postfix access table
+  template: 
+    src: access.j2 
+    dest: /etc/postfix/access
+  notify: postmap_access
+  tags:
+    - config
+
 - name: Postfix should be enabled and running
   service:
     name: postfix
