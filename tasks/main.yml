@@ -15,6 +15,7 @@
   template: 
     src: master.cf.j2 
     dest: /etc/postfix/master.cf
+    mode: 0644
   notify: restart_postfix
   tags:
     - config 
@@ -23,6 +24,7 @@
   template: 
     src: main.cf.j2 
     dest: /etc/postfix/main.cf
+    mode: 0644
   notify: restart_postfix
   tags:
     - config
@@ -31,6 +33,7 @@
   template: 
     src: transport.j2 
     dest: /etc/postfix/transport
+    mode: 0644
   notify: postmap_transport
   tags:
     - config
@@ -39,6 +42,7 @@
   template: 
     src: access.j2 
     dest: /etc/postfix/access
+    mode: 0644
   notify: postmap_access
   tags:
     - config
@@ -47,6 +51,7 @@
   template: 
     src: aliases.j2 
     dest: /etc/aliases
+    mode: 0644
   notify: postfix_newaliases
   tags:
     - config
@@ -55,6 +60,7 @@
   template: 
     src: relay_recipients.j2 
     dest: /etc/postfix/relay_recipients
+    mode: 0644
   notify: postmap_relay_recipients
   when: postfix_filter_recipients
 
@@ -62,6 +68,7 @@
   template: 
     src: policyd-spf.conf.j2
     dest: /etc/python-policyd-spf/policyd-spf.conf
+    mode: 0644
   notify: restart_postfix
   tags:
     - spf
