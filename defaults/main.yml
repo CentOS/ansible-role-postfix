@@ -68,6 +68,15 @@ postfix_fas_user:
 postfix_fas_pass:
 postfix_fas_group:
 
+# Added for new fasjson API endpoint (querying IPA through kerberos). 
+# Replacing FAS option (legacy).
+# Worth noting that it would require a service keytab, distributed by this role
+# Keytab will be computed based on {{ postfix_myhostname }} variable and then distributed
+postfix_fasjson_aliases: False
+postfix_fasjson_url: https://fasjson.stg.fedoraproject.org
+postfix_fasjson_keytab: # local keytab used to auth, distributed by this role
+postfix_fasjson_group:  # group to query fasjson for
+
 # Are we used to host mailman lists ?
 # If set to True, it will import from variables/mailman role the 
 # mailman_lists list to be included in aliases

@@ -1,0 +1,27 @@
+- name: Ensuring needed pkgs are installed
+  yum:
+    name: python-requests-gssapi
+    state: installed
+
+- name: Distributing needed keytab
+  copy:
+    src: "{{ pkistore }}/krb5/{{ postfix_fasjson_keytab }}"
+    dest: "/etc/postfix/{{ postfix_fasjson_keytab }}"
+    mode: '0400'
+    owner: root
+    group: root
+
+- name: Ensuring script to query FASJSON and reload virtusertable
+  template:
+    src: gen-virtusertable-from-fasjson.j2
+    dest: /usr/libexec/centos/gen-virtusertable-from-fas
+    owner: root
+    group: root
+    mode: 0750
+
+- name: Cron job to query FAS
+  cron:
+    name: FAS virtusertable refresh
+    job: /usr/libexec/centos/gen-virtusertable-from-fas
+    minute: "*/8"
+    user: root

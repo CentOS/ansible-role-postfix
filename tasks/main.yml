@@ -7,6 +7,10 @@
   include_tasks: fas-aliases.yml
   when: postfix_fas_aliases
 
+- name: FASJSON helpers for virtusertable
+  include_tasks: fasjson-aliases.yml
+  when: postfix_fasjson_aliases
+
 - name: TLS files for postfix
   include_tasks: tls.yml
   when: postfix_tls_enable

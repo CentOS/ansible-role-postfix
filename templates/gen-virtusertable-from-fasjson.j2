@@ -1,0 +1,33 @@
+#!/usr/bin/python
+import os
+import requests
+import json
+from requests_gssapi import HTTPSPNEGOAuth
+
+fasjson_base_url = "{{ postfix_fasjson_url }}"
+fasjson_keytab = "{{ postfix_fasjson_keytab }}"
+fasjson_group_to_query = "{{ postfix_fasjson_group }}"
+fasjson_full_url = '%s/v1/groups/%s/members/' % (fasjson_base_url, fasjson_group_to_query)
+known_aliases = ['mailer-daemon','hostmaster','postmaster']
+virtusertable = "/etc/postfix/virtusertable"
+os.environ['KRB5_CLIENT_KTNAME'] = '/etc/postfix/{{ postfix_fasjson_keytab }}'
+
+
+try:
+  gssapi_auth = HTTPSPNEGOAuth(opportunistic_auth=True,mutual_authentication='OPTIONAL')
+  results = requests.get(fasjson_full_url, auth=gssapi_auth)
+  json_body = json.loads(results.text) 
+  fo = open(virtusertable,"wb")
+  for alias in known_aliases:
+    fo.write (alias+'@centosproject.org '+alias+'@centos.org \n')
+  for member in json_body['result']:
+    user_details_url = '%s/v1/users/%s/' % (fasjson_base_url, member['username'])
+    user_details = requests.get(user_details_url, auth=gssapi_auth)
+    user_details_body = json.loads(user_details.text)
+    string = '%s@centosproject.org %s \n' % (member['username'], user_details_body['result']['emails'][0])
+    fo.write (string) 
+  fo.close()
+  os.system("/usr/sbin/postmap /etc/postfix/virtusertable")
+except:
+  print "something went wrong contacting FASJSON"
+
