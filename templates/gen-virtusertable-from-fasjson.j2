@@ -32,9 +32,11 @@ try:
       group_members_url = '%s/v1/groups/%s/members/' % (fasjson_base_url, group['groupname'])
       group_members = requests.get(group_members_url, headers=headers, auth=gssapi_auth)
       group_members_json = json.loads(group_members.text)
+      group_email = group['groupname'] + '@centosproject.org'
       userlist = []
       for user in group_members_json['result']:
-        userlist.append(user['emails'][0])
+        if not user['emails'][0] == group_email:
+          userlist.append(user['emails'][0])
       string = '%s@centosproject.org %s \n' % (group['groupname'] , ','.join(userlist))
       fo.write (string)
   logging.info('Querying now for [%s] group', fasjson_group_to_query)
