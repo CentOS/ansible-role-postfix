@@ -1,0 +1,28 @@
+#!/usr/bin/python
+from centos import AccountSystem
+from centos.client import AuthError
+import os
+
+fas_base_url = "{{ postfix_fas_url }}"
+fas_username = "{{ postfix_fas_user }}"
+fas_pass = "{{ postfix_fas_pass }}"
+fas_group_to_query = "{{ postfix_fas_group }}"
+known_aliases = ['mailer-daemon','hostmaster','postmaster']
+virtusertable = "/etc/postfix/virtusertable"
+
+
+try:
+  fas = AccountSystem(base_url=fas_base_url,username=fas_username,password=fas_pass,insecure=False)
+  group_members = fas.group_members(fas_group_to_query)
+  fo = open(virtusertable,"wb")
+  for alias in known_aliases:
+    fo.write (alias+'@centosproject.org '+alias+'@centos.org \n');
+  for member in group_members:
+    user = member['username']
+    user_detail=fas.people_by_key(key='username', search=user).values()
+    fo.write (user+'@centosproject.org '+user_detail[0]['email']+' \n'); 
+  fo.close()
+  os.system("/usr/sbin/postmap /etc/postfix/virtusertable")
+except:
+  print "something went wrong with your username/password  "
+

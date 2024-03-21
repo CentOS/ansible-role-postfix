@@ -1,6 +1,15 @@
+- name: Importing specific distro variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "{{ ansible_distribution }}.yml"
+  tags:
+    - vars
+    - always
+
 - name: Ensuring that postfix pkgs are installed
   yum:
-    name: ['postfix', 'pypolicyd-spf']
+    name: "{{ postfix_pkgs }}"
     state: latest
 
 - name: FAS helpers for virtusertable
@@ -17,7 +26,7 @@
 
 - name: Configure postfix master.cf (Adding policyd for SPF)
   template: 
-    src: master.cf.j2 
+    src: "el{{ ansible_distribution_major_version }}/master.cf.j2" 
     dest: /etc/postfix/master.cf
     mode: 0644
   notify: restart_postfix
@@ -26,7 +35,7 @@
 
 - name: Configure postfix main.cf
   template: 
-    src: main.cf.j2 
+    src: "el{{ ansible_distribution_major_version }}/main.cf.j2"
     dest: /etc/postfix/main.cf
     mode: 0644
   notify: restart_postfix

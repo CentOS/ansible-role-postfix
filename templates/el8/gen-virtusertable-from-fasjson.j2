@@ -1,0 +1,54 @@
+#!/usr/bin/python3
+import os
+import requests
+import json
+from requests_gssapi import HTTPSPNEGOAuth
+import logging
+logging.basicConfig(level=logging.INFO, filename='/var/log/virtuserable-fas.log', filemode='a', format='%(asctime)s - %(message)s')
+
+fasjson_base_url = "{{ postfix_fasjson_url }}"
+fasjson_keytab = "{{ postfix_fasjson_keytab }}"
+fasjson_group_to_query = "{{ postfix_fasjson_group }}"
+fasjson_group_members_url = '%s/v1/groups/%s/members/' % (fasjson_base_url, fasjson_group_to_query)
+fasjson_all_groups_url = '%s/v1/groups/' % (fasjson_base_url)
+known_aliases = ['mailer-daemon','hostmaster','postmaster']
+virtusertable = "/etc/postfix/virtusertable"
+os.environ['KRB5_CLIENT_KTNAME'] = '/etc/postfix/{{ postfix_fasjson_keytab }}'
+headers = {'X-Fields': '{username,emails}'}
+
+try:
+  fo = open(virtusertable,"w")
+  logging.info('Setting up first known aliases')
+  for alias in known_aliases:
+    fo.write (alias+'@centosproject.org '+alias+'@centos.org \n')
+  logging.info('[START] => Querying %s', fasjson_base_url)
+  gssapi_auth = HTTPSPNEGOAuth(opportunistic_auth=True,mutual_authentication='OPTIONAL')
+  logging.info('Querying %s for all groups', fasjson_all_groups_url)
+  results = requests.get(fasjson_all_groups_url, auth=gssapi_auth)
+  json_body = json.loads(results.text)
+  for group in json_body['result']:
+    if group['groupname'].startswith('sig-'):
+      logging.info('Querying [%s] for members of group [%s]', fasjson_base_url, group['groupname'])
+      group_members_url = '%s/v1/groups/%s/members/' % (fasjson_base_url, group['groupname'])
+      group_members = requests.get(group_members_url, headers=headers, auth=gssapi_auth)
+      group_members_json = json.loads(group_members.text)
+      group_email = group['groupname'] + '@centosproject.org'
+      userlist = []
+      for user in group_members_json['result']:
+        if not user['emails'][0] == group_email:
+          userlist.append(user['emails'][0])
+      string = '%s@centosproject.org %s \n' % (group['groupname'] , ','.join(userlist))
+      fo.write (string)
+  logging.info('Querying now for [%s] group', fasjson_group_to_query)
+  results = requests.get(fasjson_group_members_url, headers=headers, auth=gssapi_auth)
+  json_body = json.loads(results.text) 
+  for member in json_body['result']:
+    string = '%s@centosproject.org %s \n' % (member['username'], member['emails'][0])
+    fo.write (string) 
+  fo.close()
+  logging.info('[END] => Generating postfix virtusertable')
+  os.system("/usr/sbin/postmap /etc/postfix/virtusertable")
+except Exception as e:
+  logging.error("Error occured see traceback", exc_info=True)
+
+

@@ -51,7 +51,7 @@ postfix_access_whitelist:
 postfix_access_reject:
   - spammer@spam.com
 
-# We can also define a host group that will be parsed to be added in postfix access (and so relay through us)
+# We can also define an ansible host group that will be parsed to be added in postfix access (and so relay through us)
 # postfix_access_groups:
 #   - mygroup
 
@@ -72,15 +72,20 @@ postfix_fas_group:
 # Replacing FAS option (legacy).
 # Worth noting that it would require a service keytab, distributed by this role
 # Keytab will be computed based on {{ postfix_myhostname }} variable and then distributed
+# Don't forget to set `postfix_virtuser_support: True` and the postfix_virtual_alias_domain (see above)
 postfix_fasjson_aliases: False
 postfix_fasjson_url: https://fasjson.stg.fedoraproject.org
 postfix_fasjson_keytab: # local keytab used to auth, distributed by this role
 postfix_fasjson_group:  # group to query fasjson for
 
-# Are we used to host mailman lists ?
+# Are we used to host mailman2 lists ?
 # If set to True, it will import from variables/mailman role the 
 # mailman_lists list to be included in aliases
 postfix_mailman: False
+
+# Are we hosting also mailman3 ? 
+# If set to true, enabling lmtp to deliver to mailman-core
+postfix_mailman3_host: False
 
 # Usually used also for only included tasks on other nodes to relay
 # If we want to relay outgoing mails to specific host

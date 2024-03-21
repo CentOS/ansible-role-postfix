@@ -1,0 +1,3 @@
+postfix_pkgs:
+  - postfix
+  - pypolicyd-spf

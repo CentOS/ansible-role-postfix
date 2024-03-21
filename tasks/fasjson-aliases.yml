@@ -13,7 +13,7 @@
 
 - name: Ensuring script to query FASJSON and reload virtusertable
   template:
-    src: gen-virtusertable-from-fasjson.j2
+    src: "el{{ ansible_distribution_major_version }}/gen-virtusertable-from-fasjson.j2"
     dest: /usr/libexec/centos/gen-virtusertable-from-fas
     owner: root
     group: root

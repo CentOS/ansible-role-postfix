@@ -1,0 +1,134 @@
+# This file is managed by Ansible for el9 postfix version (postfix 3.5)
+# Check full upstream file for possible options to add/modify here 
+
+# Compat level, see http://www.postfix.org/COMPATIBILITY_README.html
+compatibility_level = 2
+
+queue_directory = /var/spool/postfix
+command_directory = /usr/sbin
+daemon_directory = /usr/libexec/postfix
+data_directory = /var/lib/postfix
+mail_owner = postfix
+inet_interfaces = all
+inet_protocols = all
+
+
+  
+debug_peer_level = 2
+debugger_command =
+	 PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin
+	 ddd $daemon_directory/$process_name $process_id & sleep 5
+sendmail_path = /usr/sbin/sendmail.postfix
+newaliases_path = /usr/bin/newaliases.postfix
+mailq_path = /usr/bin/mailq.postfix
+setgid_group = postdrop
+html_directory = no
+manpage_directory = /usr/share/man
+sample_directory = /usr/share/doc/postfix/samples
+readme_directory = /usr/share/doc/postfix/README_FILES
+
+
+meta_directory = /etc/postfix
+shlib_directory = /usr/lib64/postfix
+
+myhostname= {{ postfix_myhostname }}
+mydestination = $myhostname, localhost.$mydomain, localhost, {% for domain in postfix_mydestination %}{{ domain }}{% if not loop.last %},{% endif %}{% endfor %}
+
+
+mynetworks_style = subnet
+mynetworks = {{ postfix_mynetworks }}
+
+# Local aliases for $mydestination
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+
+# Masquerade settings
+masquerade_domains = {{ postfix_masquerade_domains }}
+masquerade_classes =  envelope_sender, header_sender, header_recipient
+
+{% if postfix_virtuser_support %}
+# Other domains for which we receive mails and pointing to virtusertable
+virtual_alias_domains = {{ postfix_virtual_alias_domains }}
+virtual_alias_maps = hash:/etc/postfix/virtusertable
+{% endif %}
+
+# relay part
+{% if postfix_mailman3_host %}
+# Enabling lmtp from mailman core itself to compute lists/aliases while still checking local aliases
+owner_request_special = no
+transport_maps =
+    hash:/var/lib/mailman3/data/postfix_lmtp
+    hash:/etc/postfix/transport
+local_recipient_maps = proxy:unix:passwd.byname $alias_maps
+    hash:/var/lib/mailman3/data/postfix_lmtp
+relay_domains = $mydestination, {% for domain in postfix_relay_domains %}{{ domain.name }}{% if not loop.last %},{% endif %}{% endfor %}
+    
+    hash:/var/lib/mailman3/data/postfix_domains
+    
+{% else %}
+transport_maps = hash:/etc/postfix/transport
+relay_domains = $mydestination, {% for domain in postfix_relay_domains %}{{ domain.name }}{% if not loop.last %},{% endif %}{% endfor %}
+{% endif %}
+
+{% if postfix_filter_recipients %}
+relay_recipient_maps = hash:/etc/postfix/relay_recipients
+{% endif %}
+
+
+# TLS - client part
+smtp_tls_CAfile=/etc/pki/tls/certs/ca-bundle.crt
+smtp_tls_security_level = may
+smtp_tls_loglevel = 1
+smtp_tls_mandatory_protocols = !SSLv2, !SSLv3
+smtp_tls_protocols = !SSLv2, !SSLv3
+
+{% if postfix_tls_enable %}
+# TLS - server part
+smtpd_tls_CAfile=/etc/pki/tls/certs/{{ postfix_tls_cn }}-CAChain.crt
+smtpd_tls_cert_file = /etc/pki/tls/certs/{{ postfix_tls_cn }}.crt
+smtpd_tls_key_file = /etc/pki/tls/private/{{ postfix_tls_cn }}.key
+smtpd_tls_security_level = may
+smtpd_tls_loglevel = 1
+smtpd_tls_session_cache_database = btree:/var/lib/postfix/smtpd_scache
+smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3
+smtpd_tls_protocols = !SSLv2, !SSLv3
+
+{% endif %}
+
+# SMTP checks
+recipient_delimiter = +
+unknown_local_recipient_reject_code = 550
+smtp_helo_name = {{ postfix_myhostname }}
+
+smtpd_recipient_restrictions = 
+    permit_mynetworks,
+    check_client_access hash:/etc/postfix/access,
+    reject_unauth_destination,
+    check_policy_service unix:private/policyd-spf,
+    reject_invalid_hostname,
+    reject_unauth_pipelining,
+    reject_non_fqdn_sender,
+    reject_unknown_sender_domain,
+    reject_unknown_recipient_domain,
+    reject_non_fqdn_recipient,
+{% for rbl in postfix_rbl_lists %}
+    reject_rbl_client {{ rbl }},
+{% endfor %}
+    permit
+
+
+smtpd_sender_restrictions = 
+    reject_unknown_sender_domain,
+    reject_non_fqdn_sender,
+    check_sender_access hash:/etc/postfix/access
+allow_untrusted_routing = no
+# Using smtpd_recipient_restritions but needed for postfix > 2.10
+# http://www.postfix.org/postconf.5.html#smtpd_relay_restrictions
+smtpd_relay_restrictions = permit_mynetworks
+
+body_checks_size_limit = 10000
+
+
+# SPF settings
+policyd-spf_time_limit = 3600
+
