@@ -7,6 +7,13 @@
     - vars
     - always
 
+- name: Including unbound role if needed
+  include_role: 
+    name: unbound
+  when: postfix_local_dns_cache
+  tags:
+    - resolver
+
 - name: Ensuring that postfix pkgs are installed
   yum:
     name: "{{ postfix_pkgs }}"

@@ -60,6 +60,11 @@ postfix_spf_whitelist:
   - ::1
   - 127.0.0.1
 
+# to speed-up dns queries, we can include local unbound resolver
+# if so don't forget to modify os resolvers then
+# Default to False
+postfix_local_dns_cache: False
+
 # For virtusertable we can query FAS
 # if True, it needs user/pass/url and group to query from FAS
 postfix_fas_aliases: False
