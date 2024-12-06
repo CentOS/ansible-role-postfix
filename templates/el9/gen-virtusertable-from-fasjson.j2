@@ -9,6 +9,7 @@ logging.basicConfig(level=logging.INFO, filename='/var/log/virtuserable-fas.log'
 fasjson_base_url = "{{ postfix_fasjson_url }}"
 fasjson_keytab = "{{ postfix_fasjson_keytab }}"
 fasjson_group_to_query = "{{ postfix_fasjson_group }}"
+fasjson_group_aliases = [ {% for group in postfix_fasjson_other_groups %}'{{ group }}'{%- if not loop.last -%}, {% endif %} {% endfor %} ]
 fasjson_group_members_url = '%s/v1/groups/%s/members/' % (fasjson_base_url, fasjson_group_to_query)
 fasjson_all_groups_url = '%s/v1/groups/' % (fasjson_base_url)
 known_aliases = ['mailer-daemon','hostmaster','postmaster']
@@ -39,6 +40,19 @@ try:
           userlist.append(user['emails'][0])
       string = '%s@centosproject.org %s \n' % (group['groupname'] , ','.join(userlist))
       fo.write (string)
+  logging.info('Querying now for others groups')
+  for group in fasjson_group_aliases:
+    logging.info('Querying [%s] for members of group [%s]', fasjson_base_url, group)
+    group_members_url = '%s/v1/groups/%s/members/' % (fasjson_base_url, group)
+    group_members = requests.get(group_members_url, headers=headers, auth=gssapi_auth)
+    group_members_json = json.loads(group_members.text)
+    group_email = group + '@centosproject.org'
+    userlist = []
+    for user in group_members_json['result']:
+      if not user['emails'][0] == group_email:
+        userlist.append(user['emails'][0])
+    string = '%s@centosproject.org %s \n' % (group , ','.join(userlist))
+    fo.write (string)
   logging.info('Querying now for [%s] group', fasjson_group_to_query)
   results = requests.get(fasjson_group_members_url, headers=headers, auth=gssapi_auth)
   json_body = json.loads(results.text) 

@@ -18,6 +18,8 @@
     owner: root
     group: root
     mode: 0750
+  tags:
+    - fasjson
 
 - name: Cron job to query FAS
   cron:

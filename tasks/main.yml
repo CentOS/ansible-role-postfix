@@ -26,7 +26,9 @@
 - name: FASJSON helpers for virtusertable
   include_tasks: fasjson-aliases.yml
   when: postfix_fasjson_aliases
-
+  tags:
+    - fasjson
+    
 - name: TLS files for postfix
   include_tasks: tls.yml
   when: postfix_tls_enable

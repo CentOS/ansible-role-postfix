@@ -82,6 +82,10 @@ postfix_fasjson_aliases: False
 postfix_fasjson_url: https://fasjson.stg.fedoraproject.org
 postfix_fasjson_keytab: # local keytab used to auth, distributed by this role
 postfix_fasjson_group:  # group to query fasjson for
+# Additional groups (not prefixed with sig- ) to create aliases for (with members)
+postfix_fasjson_other_groups:
+  - accounts
+
 
 # Are we used to host mailman2 lists ?
 # If set to True, it will import from variables/mailman role the 
