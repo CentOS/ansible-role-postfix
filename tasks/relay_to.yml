@@ -23,13 +23,25 @@
   when: postfix_relay_to  
   notify: restart_postfix
 
-- name: Enabling listening on all interfaces 
-  lineinfile:
-    path: /etc/postfix/main.cf
-    regexp: '^inet_interfaces'
-    line: "inet_interfaces = all"
+- block:
+    - name: Enabling listening on all interfaces 
+      lineinfile:
+        path: /etc/postfix/main.cf
+        regexp: '^inet_interfaces'
+        line: "inet_interfaces = all"
+    - name: Configuring postfix for subnet style networks
+      lineinfile:
+        path: /etc/postfix/main.cf
+        regexp: '^#mynetworks_style = subnet'
+        line: "mynetworks_style = subnet"
+    - name: Configuring postfix networks
+      lineinfile:
+        path: /etc/postfix/main.cf
+        regexp: '^#mynetworks = 168.100.189.0/28, 127.0.0.0/8'
+        line: "mynetworks = {{ postfix_mynetworks }}"
   when: postfix_relay_to  
   notify: restart_postfix
+
 
 - name: Configure postfix access table
   template: 
