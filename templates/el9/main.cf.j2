@@ -79,8 +79,8 @@ relay_recipient_maps = hash:/etc/postfix/relay_recipients
 smtp_tls_CAfile=/etc/pki/tls/certs/ca-bundle.crt
 smtp_tls_security_level = may
 smtp_tls_loglevel = 1
-smtp_tls_mandatory_protocols = !SSLv2, !SSLv3
-smtp_tls_protocols = !SSLv2, !SSLv3
+smtp_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
+smtp_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
 
 {% if postfix_tls_enable %}
 # TLS - server part
@@ -94,6 +94,15 @@ smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
 smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1
 
 {% endif %}
+
+# Common TLS ciphers settings
+# Mostly used from https://ssl-config.mozilla.org/#server=postfix&version=3.5.25&config=intermediate&openssl=3.2.2&guideline=5.6
+tls_preempt_cipherlist = no
+tls_eecdh_auto_curves = X25519 prime256v1 secp384r1
+smtp_tls_mandatory_ciphers = medium
+smtpd_tls_mandatory_ciphers = medium
+tls_medium_cipherlist = ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+
 
 # SMTP checks
 recipient_delimiter = +
